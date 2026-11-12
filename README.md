@@ -23,12 +23,20 @@ weapon type:
  - Swords: riposte kills.
  - Flails: kills on shield wielders.
  - Polearms: kills when surrounded by 2 or more friendly units.
+ - Daggers: kills at range 1.
+ - Hammers: kills on targets with no armor left.
+ - Maces: kills on stunned or dazed targets.
+ - Spears: kills while adjacent to at least 1 friendly unit.
 
 ## Implementation
 
-Additionally, this mod adds a new origin that includes a brother carrying each
-weapon type, and where the kill thresholds to get perk groups and lowered to one
-normal kill and one special kill.
+The mod requires Reforged, Dynamic Perks, and MSU. It uses Reforged's
+`pgc.rf_weapon` perk groups and adds a hidden serialized skill to each brother
+that stores normal kills, special kills, and whether a perk group was unlocked.
+
+Additionally, this mod adds a new origin, "Learning Weapons - Test", that
+includes one brother carrying each weapon type, and where the kill thresholds to
+get perk groups are lowered to one normal kill and one special kill.
 This is to help test that the mod works.
 
 ## Motivation
