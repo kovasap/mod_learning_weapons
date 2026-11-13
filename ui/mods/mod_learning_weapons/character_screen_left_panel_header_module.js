@@ -11,9 +11,12 @@ CharacterScreenLeftPanelHeaderModule.prototype.updateControls = function (_data)
 		return;
 	}
 
-	// Vanilla does not pass an entity ID for the experience bar tooltip, so the
-	// backend cannot know which brother's weapon progress to display.
-	if (!(CharacterScreenIdentifier.Entity.Id in _data))
+	// Vanilla binds the experience bar tooltip without an entity ID, so the
+	// backend has no way of knowing which brother's weapon progress to show.
+	// updateControls only receives the character data (which has no ID), so ask
+	// the datasource for the full selected brother instead.
+	var selectedBrother = this.mDataSource.getSelectedBrother();
+	if (selectedBrother === null || !(CharacterScreenIdentifier.Entity.Id in selectedBrother))
 	{
 		return;
 	}
@@ -22,6 +25,6 @@ CharacterScreenLeftPanelHeaderModule.prototype.updateControls = function (_data)
 	this.mXPProgressbar.bindTooltip({
 		contentType: 'ui-element',
 		elementId: TooltipIdentifier.CharacterScreen.LeftPanelHeaderModule.Experience,
-		entityId: _data[CharacterScreenIdentifier.Entity.Id]
+		entityId: selectedBrother[CharacterScreenIdentifier.Entity.Id]
 	});
 };

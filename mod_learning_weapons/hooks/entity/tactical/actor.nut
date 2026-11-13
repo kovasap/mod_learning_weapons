@@ -1,12 +1,20 @@
 ::LearningWeapons.HooksMod.hook("scripts/entity/tactical/actor", function(q) {
-	// Remember the last body part that was hit. actor.onDamageReceived is where
-	// the fatal blow is applied, so this is still available when the victim dies.
+	// Remember the body part of the hit that is currently being resolved. The
+	// fatal blow is applied inside the original function, so the kill hook needs
+	// this value before the call. Clear it again for non-lethal hits so that
+	// deaths from other sources (bleeding, scripts) don't inherit a stale body
+	// part and e.g. count as axe headshots.
 	q.onDamageReceived = @(__original) function( _attacker, _skill, _hitInfo )
 	{
 		if (_hitInfo != null)
 			this.m.LW_LastHitBodyPart = _hitInfo.BodyPart;
 
-		return __original(_attacker, _skill, _hitInfo);
+		local ret = __original(_attacker, _skill, _hitInfo);
+
+		if (this.isAlive())
+			this.m.LW_LastHitBodyPart = null;
+
+		return ret;
 	};
 
 	// Snapshot everything about the victim that would otherwise be unavailable
@@ -15,6 +23,11 @@
 	// not always call the base implementation.
 	q.kill = @(__original) function( _killer = null, _skill = null, _fatalityType = this.Const.FatalityType.None, _silent = false )
 	{
+		// Mirror the original's early-out so we never touch the state of an actor
+		// that was already dead or was never fully initialized.
+		if (!this.isAlive())
+			return __original(_killer, _skill, _fatalityType, _silent);
+
 		local offhand = this.getItems().getItemAtSlot(this.Const.ItemSlot.Offhand);
 
 		// CurrentProperties (and therefore getArmor) still holds the pre-hit
@@ -55,14 +68,19 @@
 		if (this.getType() != this.Const.EntityType.Player || !this.isPlayerControlled())
 			return ret;
 
+		if (!this.isAlive() || this.isDying())
+			return ret;
+
 		if (_actor == null || this.isAlliedWith(_actor))
 			return ret;
 
 		local deathInfo = _actor.m.LW_DeathInfo;
+		_actor.m.LW_DeathInfo = null;
+
 		if (deathInfo == null || deathInfo.FatalityType == this.Const.FatalityType.Unconscious)
 			return ret;
 
-		local weaponGroups = ::LearningWeapons.getWeaponGroupsForSkill(_skill);
+		local weaponGroups = ::LearningWeapons.getWeaponGroupsForSkill(_skill, this);
 		if (weaponGroups.len() == 0)
 			return ret;
 

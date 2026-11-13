@@ -35,8 +35,8 @@
 
 // This bucket is deliberately after Dynamic Perks' VeryLate hook that registers
 // its player.setStartValuesEx hook. Our hook must wrap theirs so that it runs
-// after the perk tree has been built. The queue order also puts us after
-// Reforged's queue functions.
-::LearningWeapons.HooksMod.queue([">mod_reforged", ">mod_dynamic_perks"], function() {
+// after the perk tree has been built. Hooks registered in AfterHooks are not
+// finalized, so Last is the latest bucket we can use.
+::LearningWeapons.HooksMod.queue(function() {
 	::include("mod_learning_weapons/load.nut");
 }, ::Hooks.QueueBucket.Last);

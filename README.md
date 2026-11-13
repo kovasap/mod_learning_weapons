@@ -9,11 +9,10 @@ battle.
 This works by tracking the number of kills each brother gets with each weapon
 type, which can be seen by hovering over the EXP bar in the roster screen.
 
-Once a brother gets 20 kills with a weapon, they are then permanently granted
-that weapon's perk group.
+Once a brother gets 20 kills with a weapon and 5 special kills with it, they
+are then permanently granted that weapon's perk group.
 
-Additionally, unlocking perk groups requires 5 special kills, thematic to that
-weapon type:
+The special kills are thematic to the weapon type:
 
  - Bows: kills at range 5 or more.
  - Throwing Weapons: kills at range 2.

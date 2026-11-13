@@ -35,27 +35,40 @@
 	return skill;
 };
 
-// Restores any perk groups that were already unlocked. This is cheap and makes
-// the mod resilient if another mod rebuilds the perk tree after the unlock.
-::LearningWeapons.ensureUnlockedGroups <- function( _actor )
+// Makes the perk tree match the recorded progress: weapon perk groups that have
+// not been unlocked yet are removed and unlocked ones are restored.
+//
+// This is safe to call repeatedly and is used both when a brother is created
+// and whenever the perk tree may have been rebuilt by another mod (Reforged, for
+// example, rebuilds the perk trees of starting brothers after spawning them).
+::LearningWeapons.applyProgressionToPerkTree <- function( _actor )
 {
-	local skill = ::LearningWeapons.getProgressSkill(_actor);
-
-	if (skill == null)
+	if (_actor == null || ::MSU.isNull(_actor) || !("getPerkTree" in _actor))
 		return;
 
 	local perkTree = _actor.getPerkTree();
 	if (perkTree == null)
 		return;
 
-	foreach (groupID, progress in skill.m.Progress)
+	local skill = ::LearningWeapons.getProgressSkill(_actor);
+
+	foreach (groupID in ::LearningWeapons.WeaponGroupIDs)
 	{
-		if (progress.Unlocked && !perkTree.hasPerkGroup(groupID))
-			perkTree.addPerkGroup(groupID);
+		local unlocked = skill != null && skill.getProgress(groupID).Unlocked;
+
+		if (unlocked)
+		{
+			if (!perkTree.hasPerkGroup(groupID))
+				perkTree.addPerkGroup(groupID);
+		}
+		else if (perkTree.hasPerkGroup(groupID))
+		{
+			perkTree.removePerkGroup(groupID);
+		}
 	}
 };
 
-::LearningWeapons.getWeaponGroupsForSkill <- function( _skill )
+::LearningWeapons.getWeaponGroupsForSkill <- function( _skill, _actor )
 {
 	local ret = [];
 
@@ -63,13 +76,29 @@
 		return ret;
 
 	local weapon = _skill.getItem();
+
+	// Some weapon skills (e.g. Quick Shot or Deathblow) are granted by perks and
+	// have no item of their own. They still use the equipped weapon, so fall
+	// back to the mainhand weapon for weapon skills.
+	if ((weapon == null || ::MSU.isNull(weapon)) && _skill.isWeaponSkill() && _actor != null && !::MSU.isNull(_actor))
+		weapon = _actor.getItems().getItemAtSlot(::Const.ItemSlot.Mainhand);
+
 	if (weapon == null || ::MSU.isNull(weapon))
 		return ret;
 
 	if (!weapon.isItemType(::Const.Items.ItemType.Weapon))
 		return ret;
 
-	return ::Reforged.getWeaponPerkGroups(weapon);
+	// Reforged maps the Firearm weapon type to the crossbow perk group, so a
+	// weapon that is both (e.g. a firelance is a spear/firearm) can produce the
+	// same group twice. Only count each managed group once per kill.
+	foreach (groupID in ::Reforged.getWeaponPerkGroups(weapon))
+	{
+		if (ret.find(groupID) == null && ::LearningWeapons.WeaponGroupIDs.find(groupID) != null)
+			ret.push(groupID);
+	}
+
+	return ret;
 };
 
 // The dagger/hammer/mace/spear rules were added on top of the initial weapon
@@ -154,7 +183,9 @@
 
 ::LearningWeapons.getTooltipEntries <- function( _actor )
 {
-	::LearningWeapons.ensureUnlockedGroups(_actor);
+	// The tooltip is the only place the player can see the progress, so make sure
+	// the perk tree is in sync even if another mod rebuilt it in the meantime.
+	::LearningWeapons.applyProgressionToPerkTree(_actor);
 
 	local skill = ::LearningWeapons.getProgressSkill(_actor);
 	if (skill == null)
@@ -164,14 +195,13 @@
 	local ret = [
 		{
 			id = 99,
-			type = "title",
+			type = "header",
 			text = "Weapon Progression"
 		},
 		{
 			id = 100,
 			type = "text",
-			icon = "ui/icons/special.png",
-			text = "Kills (special kills) needed to unlock each weapon perk group:"
+			text = "Unlock a weapon perk group by getting " + thresholds.Normal + " kills and " + thresholds.Special + " special kills with that weapon type."
 		}
 	];
 
@@ -181,13 +211,13 @@
 		local progress = skill.getProgress(groupID);
 		local perkGroup = ::DynamicPerks.PerkGroups.findById(groupID);
 		local name = perkGroup != null ? perkGroup.getName() : groupID;
-		local status = progress.Unlocked ? " [color=#4caf50]Unlocked[/color]" : "";
+		local status = progress.Unlocked ? " [color=" + ::Const.UI.Color.PositiveValue + "]Unlocked[/color]" : "";
 
 		ret.push({
 			id = id,
 			type = "text",
 			icon = "ui/icons/special.png",
-			text = name + ": " + progress.Kills + "/" + thresholds.Normal + " kills, " + progress.SpecialKills + "/" + thresholds.Special + " special" + status
+			text = name + ": " + progress.Kills + "/" + thresholds.Normal + " kills, " + progress.SpecialKills + "/" + thresholds.Special + " special kills" + status
 		});
 
 		id = id + 1;

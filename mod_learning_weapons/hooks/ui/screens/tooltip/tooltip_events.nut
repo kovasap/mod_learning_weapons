@@ -9,8 +9,10 @@
 		if (_entityId == null)
 			return ret;
 
+		// Tactical.getEntityByID also resolves roster brothers while on the world
+		// map, which is where the character screen is normally used.
 		local entity = ::Tactical.getEntityByID(_entityId);
-		if (entity == null || entity == ::MSU.getDummyPlayer() || entity.getType() != ::Const.EntityType.Player)
+		if (entity == null || entity.getType() != ::Const.EntityType.Player || !entity.isPlayerControlled())
 			return ret;
 
 		if (ret == null)
