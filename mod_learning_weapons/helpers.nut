@@ -24,6 +24,9 @@
 		return null;
 
 	local skills = _actor.getSkills();
+	if (skills == null)
+		return null;
+
 	local skill = skills.getSkillByID("special.learning_weapons_progress");
 
 	if (skill == null)
@@ -43,7 +46,7 @@
 // example, rebuilds the perk trees of starting brothers after spawning them).
 ::LearningWeapons.applyProgressionToPerkTree <- function( _actor )
 {
-	if (_actor == null || ::MSU.isNull(_actor) || !("getPerkTree" in _actor))
+	if (_actor == null || ::MSU.isNull(_actor) || !::MSU.isKindOf(_actor, "player"))
 		return;
 
 	local perkTree = _actor.getPerkTree();
@@ -80,8 +83,11 @@
 	// Some weapon skills (e.g. Quick Shot or Deathblow) are granted by perks and
 	// have no item of their own. They still use the equipped weapon, so fall
 	// back to the mainhand weapon for weapon skills.
-	if ((weapon == null || ::MSU.isNull(weapon)) && _skill.isWeaponSkill() && _actor != null && !::MSU.isNull(_actor))
-		weapon = _actor.getItems().getItemAtSlot(::Const.ItemSlot.Mainhand);
+	if ((weapon == null || ::MSU.isNull(weapon)) && _skill.m.IsWeaponSkill && _actor != null && !::MSU.isNull(_actor))
+	{
+		local items = _actor.getItems();
+		weapon = items != null ? items.getItemAtSlot(::Const.ItemSlot.Mainhand) : null;
+	}
 
 	if (weapon == null || ::MSU.isNull(weapon))
 		return ret;
@@ -179,6 +185,47 @@
 			}
 		}
 	}
+};
+
+// ---------------------------------------------------------------------------
+// Transient combat state
+//
+// This is deliberately kept outside of the actor's `m` table. Adding new fields
+// to engine objects at runtime is not safe (some of them are class instances and
+// reject unknown fields), and this data must never end up in a savegame.
+// Entries are keyed by entity ID and removed as soon as they have been used.
+// ---------------------------------------------------------------------------
+::LearningWeapons.Transient <- {
+	LastHitBodyPart = {},
+	DeathInfo = {},
+	Riposting = {}
+};
+
+::LearningWeapons.storeTransient <- function( _store, _actor, _value )
+{
+	if (_actor == null || ::MSU.isNull(_actor))
+		return;
+
+	_store.rawset(_actor.getID(), _value);
+};
+
+::LearningWeapons.loadTransient <- function( _store, _actor, _default = null )
+{
+	if (_actor == null || ::MSU.isNull(_actor))
+		return _default;
+
+	local id = _actor.getID();
+	return _store.rawin(id) ? _store.rawget(id) : _default;
+};
+
+::LearningWeapons.clearTransient <- function( _store, _actor )
+{
+	if (_actor == null || ::MSU.isNull(_actor))
+		return;
+
+	local id = _actor.getID();
+	if (_store.rawin(id))
+		_store.rawdelete(id);
 };
 
 ::LearningWeapons.getTooltipEntries <- function( _actor )

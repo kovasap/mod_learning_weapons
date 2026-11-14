@@ -9,23 +9,43 @@ battle.
 This works by tracking the number of kills each brother gets with each weapon
 type, which can be seen by hovering over the EXP bar in the roster screen.
 
-Once a brother gets 20 kills with a weapon and 5 special kills with it, they
+Once a brother gets 20 kills with a weapon and 1 special achievement with it, they
 are then permanently granted that weapon's perk group.
 
-The special kills are thematic to the weapon type:
+The special achievements are:
 
- - Bows: kills at range 5 or more.
- - Throwing Weapons: kills at range 2.
- - Crossbows: kills on targets that still have armor when they die.
- - Cleavers: decapitations.
- - Axes: headshots.
- - Swords: riposte kills.
- - Flails: kills on shield wielders.
- - Polearms: kills when surrounded by 2 or more friendly units.
- - Daggers: kills at range 1.
- - Hammers: kills on targets with no armor left.
- - Maces: kills on stunned or dazed targets.
- - Spears: kills while adjacent to at least 1 friendly unit.
+ - Bows: Sniper - Get a kill at range 5 or more.
+ - Throwing Weapons: Come at me! - Get a kill at range 2 on an enemy not engaged
+   with any friendly units.
+ - Cleavers: Mercy Killer - Decapitate a bleeding enemy.
+ - Crossbows: Shell Cracker - Get a kill on an enemy that still has armor
+   remaining when they die.
+ - Axes: Executioner - Kill an enemy with a headshot.
+ - Swords: Duelist - Kill an enemy with a riposte.
+ - Flails: Talented - Kill an enemy wielding a shield with a headshot.
+ - Polearms: Savior - Move an enemy away from an injured friendly unit with
+   Repel or Hook.
+ - Daggers: Assassin - Kill an enemy with a chestpiece of 75% condition or
+   higher.
+ - Hammers: Can Opener - Fully destroy an enemy's armor (head and chest) from
+   100% to 0% without injuring them.
+   This can happen over multiple hits, but the enemy cannot take damage from any
+   other source.
+ - Maces: Heavy Hitter - Kill a stunned enemy.
+ - Spears: Hold your ground! - Kill an enemy with spearwall.
+
+The achievements must be earned while wielding a weapon of the type the
+achievement is for.  Hybrid weapons work for both weapon types.
+
+When hovering over the EXP bar to see progress on each weapon, show the progress
+towards the 20 kills, then show a check or x next to "Complete <achievement
+name>".
+To see the achievement description, use the reforged nested tooltips feature.
+Add nested tooltips in achievement descriptions as well where appropriate (such
+as for the ability names in the polearms description).
+
+When an achievement is completed, show it in the combat log in extra visible
+font (e.g. bolded).
 
 ## Implementation
 

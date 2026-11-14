@@ -2,7 +2,7 @@
 
 To work on this mod, you will need to reference several other codebases:
 
-1. The Battle Brothers source code at https://github.com/kovasap/battle-bros-decompiled
+1. The Battle Brothers source code at https://github.com/ninkjin/Battle-Brothers-Scripts
 2. The Reforged Overhaul mod code at https://github.com/Battle-Modders/mod-reforged
 3. The Hardened Reforged Overhaul mod at https://github.com/Darxo/Hardened
 

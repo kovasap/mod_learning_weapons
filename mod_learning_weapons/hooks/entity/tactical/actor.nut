@@ -4,15 +4,17 @@
 	// this value before the call. Clear it again for non-lethal hits so that
 	// deaths from other sources (bleeding, scripts) don't inherit a stale body
 	// part and e.g. count as axe headshots.
+	//
+	// The value is kept in ::LearningWeapons.Transient instead of on this.m:
+	// engine objects reject unknown fields, and this state must not be serialized.
 	q.onDamageReceived = @(__original) function( _attacker, _skill, _hitInfo )
 	{
-		if (_hitInfo != null)
-			this.m.LW_LastHitBodyPart = _hitInfo.BodyPart;
+		::LearningWeapons.storeTransient(::LearningWeapons.Transient.LastHitBodyPart, this, _hitInfo != null ? _hitInfo.BodyPart : null);
 
 		local ret = __original(_attacker, _skill, _hitInfo);
 
 		if (this.isAlive())
-			this.m.LW_LastHitBodyPart = null;
+			::LearningWeapons.clearTransient(::LearningWeapons.Transient.LastHitBodyPart, this);
 
 		return ret;
 	};
@@ -28,35 +30,47 @@
 		if (!this.isAlive())
 			return __original(_killer, _skill, _fatalityType, _silent);
 
-		local offhand = this.getItems().getItemAtSlot(this.Const.ItemSlot.Offhand);
+		local items = this.getItems();
+		local offhand = items != null ? items.getItemAtSlot(this.Const.ItemSlot.Offhand) : null;
 
 		// CurrentProperties (and therefore getArmor) still holds the pre-hit
 		// values at this point, because Skills.update() runs after the lethal
 		// hit. Read the base values instead: onDamageReceived has already
 		// applied the fatal blow to them. Only the "armor left or not" state
 		// matters for the special kill rules, so the raw values suffice.
-		local armor = this.m.BaseProperties.Armor;
+		local baseProperties = this.m.BaseProperties;
+		local armor = baseProperties != null ? baseProperties.Armor : null;
+		local skills = this.getSkills();
+		local isStunned = skills != null && (skills.hasSkill("effects.stunned") || skills.hasSkill("effects.dazed"));
 
-		this.m.LW_DeathInfo = {
+		::LearningWeapons.storeTransient(::LearningWeapons.Transient.DeathInfo, this, {
 			FatalityType = _fatalityType,
-			ArmorHead = armor[this.Const.BodyPart.Head],
-			ArmorBody = armor[this.Const.BodyPart.Body],
+			ArmorHead = armor != null ? armor[this.Const.BodyPart.Head] : 0,
+			ArmorBody = armor != null ? armor[this.Const.BodyPart.Body] : 0,
 			HasShield = offhand != null && offhand.isItemType(this.Const.Items.ItemType.Shield),
-			LastHitBodyPart = this.m.LW_LastHitBodyPart,
-			IsStunned = this.getSkills().hasSkill("effects.stunned") || this.getSkills().hasSkill("effects.dazed")
-		};
+			LastHitBodyPart = ::LearningWeapons.loadTransient(::LearningWeapons.Transient.LastHitBodyPart, this),
+			IsStunned = isStunned
+		});
 
-		return __original(_killer, _skill, _fatalityType, _silent);
+		// Consumed by the killer's onActorKilled, which runs inside __original.
+		::LearningWeapons.clearTransient(::LearningWeapons.Transient.LastHitBodyPart, this);
+
+		local ret = __original(_killer, _skill, _fatalityType, _silent);
+
+		// If no killer consumed the snapshot (e.g. a scripted death), drop it.
+		::LearningWeapons.clearTransient(::LearningWeapons.Transient.DeathInfo, this);
+
+		return ret;
 	};
 
 	// Riposte attacks are executed inside onRiposte, so a flag around the
 	// original call reliably identifies kills made by a riposte.
 	q.onRiposte = @(__original) function( _info )
 	{
-		local wasRiposting = this.m.LW_IsRiposting;
-		this.m.LW_IsRiposting = true;
+		local wasRiposting = ::LearningWeapons.loadTransient(::LearningWeapons.Transient.Riposting, this, false);
+		::LearningWeapons.storeTransient(::LearningWeapons.Transient.Riposting, this, true);
 		local ret = __original(_info);
-		this.m.LW_IsRiposting = wasRiposting;
+		::LearningWeapons.storeTransient(::LearningWeapons.Transient.Riposting, this, wasRiposting);
 		return ret;
 	};
 
@@ -74,8 +88,8 @@
 		if (_actor == null || this.isAlliedWith(_actor))
 			return ret;
 
-		local deathInfo = _actor.m.LW_DeathInfo;
-		_actor.m.LW_DeathInfo = null;
+		local deathInfo = ::LearningWeapons.loadTransient(::LearningWeapons.Transient.DeathInfo, _actor);
+		::LearningWeapons.clearTransient(::LearningWeapons.Transient.DeathInfo, _actor);
 
 		if (deathInfo == null || deathInfo.FatalityType == this.Const.FatalityType.Unconscious)
 			return ret;
@@ -112,7 +126,7 @@
 			ArmorBody = deathInfo.ArmorBody,
 			FatalityType = deathInfo.FatalityType,
 			LastHitBodyPart = deathInfo.LastHitBodyPart,
-			IsRiposting = this.m.LW_IsRiposting == true,
+			IsRiposting = ::LearningWeapons.loadTransient(::LearningWeapons.Transient.Riposting, this, false) == true,
 			HasShield = deathInfo.HasShield,
 			AdjacentAllies = adjacentAllies,
 			IsStunned = deathInfo.IsStunned

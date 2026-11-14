@@ -1,0 +1,5 @@
+# Build artifact produced by zip_mod.sh
+mod_learning_weapons.zip
+
+# Local game logs pasted for debugging
+errors.txt
