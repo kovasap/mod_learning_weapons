@@ -11,4 +11,10 @@
 
 		::LearningWeapons.applyProgressionToPerkTree(this);
 	};
+
+	q.onCombatFinished = @(__original) function()
+	{
+		__original();
+		::LearningWeapons.resetTransient();
+	};
 });

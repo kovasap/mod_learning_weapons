@@ -3,3 +3,8 @@ mod_learning_weapons.zip
 
 # Local game logs pasted for debugging
 errors.txt
+
+# Reference repositories cloned locally for development
+/Battle-Brothers-Scripts/
+/mod-reforged/
+/Hardened/

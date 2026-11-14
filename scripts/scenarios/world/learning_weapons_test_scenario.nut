@@ -4,7 +4,7 @@ this.learning_weapons_test_scenario <- this.inherit("scripts/scenarios/world/sta
 	{
 		this.m.ID = "scenario.learning_weapons_test";
 		this.m.Name = "Learning Weapons - Test";
-		this.m.Description = "[p=c][img]gfx/ui/events/event_80.png[/img][/p][p]A testing origin for the Learning Weapons mod.\n\n[color=#bcad8c]Weapon Students:[/color] Start with one brother for every weapon type.\n[color=#bcad8c]Quick Learners:[/color] Weapon perk groups require only 1 normal kill and 1 special kill.[/p]";
+		this.m.Description = "[p=c][img]gfx/ui/events/event_80.png[/img][/p][p]A testing origin for the Learning Weapons mod.\n\n[color=#bcad8c]Weapon Students:[/color] Start with one brother for every weapon type.\n[color=#bcad8c]Quick Learners:[/color] Weapon perk groups require only 1 normal kill and 1 special achievement.[/p]";
 		this.m.Difficulty = 1;
 		this.m.Order = 1;
 	}

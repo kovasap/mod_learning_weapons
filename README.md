@@ -19,7 +19,7 @@ The special achievements are:
    with any friendly units.
  - Cleavers: Mercy Killer - Decapitate a bleeding enemy.
  - Crossbows: Shell Cracker - Get a kill on an enemy that still has armor
-   remaining when they die.
+   remaining on both head and body when they die.
  - Axes: Executioner - Kill an enemy with a headshot.
  - Swords: Duelist - Kill an enemy with a riposte.
  - Flails: Talented - Kill an enemy wielding a shield with a headshot.
